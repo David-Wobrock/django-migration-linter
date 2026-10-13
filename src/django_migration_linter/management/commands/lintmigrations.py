@@ -4,11 +4,11 @@ import configparser
 import itertools
 import os
 import sys
+import tomllib
 from collections.abc import Callable
 from importlib import import_module
 from typing import Any
 
-import toml
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandParser
 
@@ -225,7 +225,8 @@ class Command(BaseCommand):
         toml_options = {}
 
         if os.path.exists(PYPROJECT_TOML):
-            pyproject_toml = toml.load(PYPROJECT_TOML)
+            with open(PYPROJECT_TOML, encoding="utf-8") as f:
+                pyproject_toml = tomllib.loads(f.read())
             section = pyproject_toml.get("tool", {}).get(CONFIG_NAME, {})
             for key in options:
                 if key in section:
