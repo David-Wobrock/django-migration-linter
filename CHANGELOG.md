@@ -15,6 +15,8 @@ Miscellaneous:
 - Drop support of Django 5.0
 - Drop support of Django 5.1
 
+- Move project ownership from [3YOURMIND](https://github.com/3YOURMIND/) to [David](https://github.com/David-Wobrock/).
+
 ## 6.0.0
 
 Feature:
