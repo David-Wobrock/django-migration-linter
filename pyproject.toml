@@ -7,6 +7,7 @@ name = "django-migration-linter"
 version = "6.0.0"
 description = "Detect backward incompatible migrations for your django project"
 authors = [
+  { name="David Wobrock", email="david.wobrock@gmail.com" },
   { name="3YOURMIND GmbH", email="fb@3yourmind.com" },
 ]
 maintainers = [{name = "David Wobrock", email = "david.wobrock@gmail.com"}]
@@ -46,8 +47,8 @@ keywords = [
 ]
 
 [project.urls]
-Changelog = "https://github.com/3YOURMIND/django-migration-linter/blob/main/CHANGELOG.md"
-Repository = "https://github.com/3YOURMIND/django-migration-linter"
+Changelog = "https://github.com/David-Wobrock/django-migration-linter/blob/main/CHANGELOG.md"
+Repository = "https://github.com/David-Wobrock/django-migration-linter"
 
 [tool.setuptools.package-data]
 django_migration_linter = ['py.typed']

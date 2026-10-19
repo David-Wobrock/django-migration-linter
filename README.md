@@ -3,11 +3,8 @@
 Detect backward incompatible migrations for your Django project.
 It will save you time by making sure migrations will not break with a older codebase.
 
-[![Build Status](https://img.shields.io/endpoint.svg?url=https%3A%2F%2Factions-badge.atrox.dev%2F3YOURMIND%2Fdjango-migration-linter%2Fbadge%3Fref%3Dmain&style=flat)](https://actions-badge.atrox.dev/3YOURMIND/django-migration-linter/goto?ref=main)
 [![PyPI](https://img.shields.io/pypi/v/django-migration-linter.svg)](https://pypi.python.org/pypi/django-migration-linter/)
-[![PR_Welcome](https://img.shields.io/badge/PR-welcome-green.svg)](https://github.com/3YOURMIND/django-migration-linter/pulls)
-[![3YD_Hiring](https://img.shields.io/badge/3YOURMIND-Hiring-brightgreen.svg)](https://www.3yourmind.com/career)
-[![GitHub_Stars](https://img.shields.io/github/stars/3YOURMIND/django-migration-linter.svg?style=social&label=Stars)](https://github.com/3YOURMIND/django-migration-linter/stargazers)
+[![GitHub_Stars](https://img.shields.io/github/stars/David-Wobrock/django-migration-linter.svg?style=social&label=Stars)](https://github.com/David-Wobrock/django-migration-linter/stargazers)
 
 ## Quick installation
 
@@ -112,4 +109,6 @@ Some implementation details [can be found in the ./docs/internals/ folder](./doc
 
 *django-migration-linter* is released under the [Apache 2.0 License](./LICENSE).
 
-##### Maintained by [David Wobrock](https://github.com/David-Wobrock)
+Maintained by [David](https://github.com/David-Wobrock).
+
+Created originally at [3YOURMIND](https://www.3yourmind.com/).

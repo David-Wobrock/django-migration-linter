@@ -188,4 +188,4 @@ For operations like adding a column to an existing table, Django actually genera
 - renaming the new table to the current table name
 
 At the time of writing, the linter doesn't support a fine-grained detection of field alteration when using the sqlite process.
-An [issue #142](https://github.com/3YOURMIND/django-migration-linter/issues/142) is already open and Django also has a [ticket about supporting sqlite ALTER functions](https://code.djangoproject.com/ticket/32502).
+An [issue #142](https://github.com/David-Wobrock/django-migration-linter/issues/142) is already open and Django also has a [ticket about supporting sqlite ALTER functions](https://code.djangoproject.com/ticket/32502).
