@@ -14,6 +14,7 @@ Miscellaneous:
 - Drop support of Django 4.2
 - Drop support of Django 5.0
 - Drop support of Django 5.1
+- Drop support of Python 3.10
 
 - Move project ownership from [3YOURMIND](https://github.com/3YOURMIND/) to [David](https://github.com/David-Wobrock/).
 
