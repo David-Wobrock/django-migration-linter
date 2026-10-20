@@ -5,7 +5,14 @@ import pickle
 
 
 class Cache(dict):
-    def __init__(self, django_folder: str | None, database: str, cache_path: str):
+    def __init__(
+        self,
+        django_folder: str | None,
+        database: str,
+        cache_path: str,
+        options: dict | None = None,
+    ):
+        self.options = options
         self.filename = os.path.join(
             cache_path,
             "{}_{}.pickle".format(str(django_folder).replace(os.sep, "_"), database),
@@ -20,7 +27,9 @@ class Cache(dict):
         try:
             with open(self.filename, "rb") as f:
                 tmp_dict = pickle.load(f)
-                self.update(tmp_dict)
+                # Older caches have no options and may contain filtered results.
+                if getattr(tmp_dict, "options", None) == self.options:
+                    self.update(tmp_dict)
         except OSError:
             pass
 

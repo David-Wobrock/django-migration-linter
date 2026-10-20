@@ -76,14 +76,14 @@ class MigrationLinter:
         self.include_name = include_name or []
         self.include_apps = include_apps
         self.exclude_apps = exclude_apps
-        self.exclude_migration_tests = exclude_migration_tests or []
+        self.exclude_migration_tests = list(exclude_migration_tests or [])
         self.database = database or DEFAULT_DB_ALIAS
         self.cache_path = cache_path or DEFAULT_CACHE_PATH
         self.no_cache = no_cache
         self.only_applied_migrations = only_applied_migrations
         self.only_unapplied_migrations = only_unapplied_migrations
         self.quiet = quiet or []
-        self.warnings_as_errors_tests = warnings_as_errors_tests
+        self.warnings_as_errors_tests = list(warnings_as_errors_tests or [])
         self.all_warnings_as_errors = all_warnings_as_errors
         self.no_output = no_output
         self.sql_analyser_class = get_sql_analyser_class(
@@ -98,8 +98,22 @@ class MigrationLinter:
 
         # Initialise cache. Read from old, write to new, in order to prune old entries.
         if self.should_use_cache():
-            self.old_cache = Cache(self.django_path, self.database, self.cache_path)
-            self.new_cache = Cache(self.django_path, self.database, self.cache_path)
+            cache_options = {
+                "exclude_migration_tests": sorted(self.exclude_migration_tests),
+                "warnings_as_errors_tests": sorted(self.warnings_as_errors_tests or []),
+                "all_warnings_as_errors": self.all_warnings_as_errors,
+                "ignore_sqlmigrate_errors": self.ignore_sqlmigrate_errors,
+                "sql_analyser_class": (
+                    self.sql_analyser_class.__module__,
+                    self.sql_analyser_class.__qualname__,
+                ),
+            }
+            self.old_cache = Cache(
+                self.django_path, self.database, self.cache_path, cache_options
+            )
+            self.new_cache = Cache(
+                self.django_path, self.database, self.cache_path, cache_options
+            )
             self.old_cache.load()
 
         # Initialise migrations

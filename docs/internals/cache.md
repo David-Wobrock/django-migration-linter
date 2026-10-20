@@ -8,3 +8,9 @@ Since the linter uses hashes of the file's content, modifying a migration file w
 If you want to run the linter without cache, use the flag `--no-cache`.
 If you want to invalidate the cache, delete the cache folder.
 The cache folder can also be defined manually through the `--cache-path` option.
+
+Cached results are only reused when the SQL analyser and result-affecting options
+are unchanged. Changing excluded migration tests, warning promotion options, or
+`--ignore-sqlmigrate-errors` invalidates the previous results. Older caches without
+this option metadata are also recomputed. Output-only options do not invalidate
+the cache.
