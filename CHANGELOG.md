@@ -3,6 +3,9 @@
 Feature:
 - Django `sqlmigrate` errors are now caught properly by the linter, and raised in the final result. (#322)
 
+Bug:
+- Read the table of a `CREATE INDEX` from the identifier after `ON`, so a partial index (`WHERE (...)`) or an index with `USING ... WITH (...)` on a table created in the same migration is no longer reported as `CREATE_INDEX` / `CREATE_INDEX_EXCLUSIVE`
+
 Miscellaneous:
 - Replace the unmaintained `toml` dependency with the standard library `tomllib` (#325)
 
