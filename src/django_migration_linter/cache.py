@@ -23,6 +23,16 @@ class Cache(dict):
                 self.update(tmp_dict)
         except OSError:
             pass
+        except (
+            EOFError,
+            ValueError,
+            AttributeError,
+            ImportError,
+            pickle.UnpicklingError,
+        ):
+            # The cache file is corrupt or was written by an incompatible
+            # version. Start with an empty cache instead of crashing.
+            pass
 
     def save(self) -> None:
         with open(self.filename, "wb") as f:
