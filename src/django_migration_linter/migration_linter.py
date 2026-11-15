@@ -45,6 +45,14 @@ class MessageType(Enum):
 
 
 class MigrationLinter:
+    CACHED_RESULT_OPTIONS = (
+        "exclude_migration_tests",
+        "warnings_as_errors_tests",
+        "all_warnings_as_errors",
+        "ignore_sqlmigrate_errors",
+        "analyser_string",
+    )
+
     def __init__(
         self,
         path: str | None = None,
@@ -98,8 +106,13 @@ class MigrationLinter:
 
         # Initialise cache. Read from old, write to new, in order to prune old entries.
         if self.should_use_cache():
-            self.old_cache = Cache(self.django_path, self.database, self.cache_path)
-            self.new_cache = Cache(self.django_path, self.database, self.cache_path)
+            caching_options = self.compute_caching_options()
+            self.old_cache = Cache(
+                self.django_path, self.database, self.cache_path, caching_options
+            )
+            self.new_cache = Cache(
+                self.django_path, self.database, self.cache_path, caching_options
+            )
             self.old_cache.load()
 
         # Initialise migrations
@@ -118,6 +131,20 @@ class MigrationLinter:
 
     def should_use_cache(self) -> bool:
         return bool(self.django_path and not self.no_cache)
+
+    def compute_caching_options(self) -> dict[str, str]:
+        options = {}
+        attr_aliases = {"analyser_string": "sql_analyser_class"}
+        for param in self.CACHED_RESULT_OPTIONS:
+            attr = attr_aliases.get(param, param)
+            options[param] = self.cast_option_value_for_cache(getattr(self, attr))
+        return options
+
+    @staticmethod
+    def cast_option_value_for_cache(value: object) -> str:
+        if isinstance(value, (list, tuple, set, frozenset)):
+            return ",".join(sorted(str(v) for v in value))
+        return str(value)
 
     def lint_all_migrations(
         self,

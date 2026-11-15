@@ -5,7 +5,7 @@ import unittest
 import unittest.mock as mock
 
 from django.conf import settings
-from django.db.migrations import Migration
+from django.db.migrations import Migration, RunPython
 
 from django_migration_linter import (
     IgnoreMigration,
@@ -264,3 +264,80 @@ class CacheTestCase(unittest.TestCase):
         cache.load()
         self.assertEqual(1, len(cache))
         self.assertEqual("OK", cache["eb6832d34f7ad40903a51a8b053ac13c"]["result"])
+
+    @mock.patch(
+        "django_migration_linter.MigrationLinter._gather_all_migrations",
+        return_value=[
+            Migration("0001_initial", "app_data_migrations"),
+            Migration("0002_missing_reverse", "app_data_migrations"),
+        ],
+    )
+    def test_cache_takes_options_into_account(self, _gather_all_migrations):
+        # Faking the 'operations', since the migration file is not read from disk here.
+        _gather_all_migrations.return_value[1].operations = [
+            RunPython(lambda apps, schema_editor: None),
+        ]
+
+        # Create test linters.
+        linter_1 = MigrationLinter(self.test_project_path, database="sqlite")
+        linter_1.old_cache.clear()
+        linter_1.old_cache.save()
+        # Start the Linter again, but with an option. The result should not be cached.
+        linter_2 = MigrationLinter(
+            self.test_project_path,
+            database="sqlite",
+            warnings_as_errors_tests=["RUNPYTHON_REVERSIBLE"],
+        )
+        linter_2.old_cache.clear()
+        linter_2.old_cache.save()
+
+        # 1 - Not cached.
+        with mock.patch(
+            "django_migration_linter.migration_linter.analyse_sql_statements",
+            wraps=analyse_sql_statements,
+        ) as analyse_sql_statements_mock:
+            linter_1.lint_all_migrations()
+            self.assertEqual(2, analyse_sql_statements_mock.call_count)
+
+        cache = linter_1.new_cache
+        cache.load()
+
+        self.assertEqual("OK", cache["42ac7f74f6168dbc40b3cb2328d574e3"]["result"])
+        self.assertEqual("WARNING", cache["911a42e9584ab70c55ea2875122c37de"]["result"])
+        self.assertListEqual(
+            [
+                Issue(
+                    code="RUNPYTHON_REVERSIBLE",
+                    message=mock.ANY,
+                ),
+            ],
+            cache["911a42e9584ab70c55ea2875122c37de"]["warnings"],
+        )
+
+        self.assertGreater(linter_1.nb_warnings, 0)
+        self.assertFalse(linter_1.has_errors)
+
+        # 2 - Not cached.
+        with mock.patch(
+            "django_migration_linter.migration_linter.analyse_sql_statements",
+            wraps=analyse_sql_statements,
+        ) as analyse_sql_statements_mock:
+            linter_2.lint_all_migrations()
+            self.assertEqual(2, analyse_sql_statements_mock.call_count)
+
+        self.assertEqual(linter_2.nb_warnings, 0)
+        self.assertTrue(linter_2.has_errors)
+
+        # Same as first linter object.
+        linter_3 = MigrationLinter(self.test_project_path, database="sqlite")
+
+        # 3 - Cached, because same as 1.
+        with mock.patch(
+            "django_migration_linter.migration_linter.analyse_sql_statements",
+            wraps=analyse_sql_statements,
+        ) as analyse_sql_statements_mock:
+            linter_3.lint_all_migrations()
+            analyse_sql_statements_mock.assert_not_called()
+
+        self.assertGreater(linter_3.nb_warnings, 0)
+        self.assertFalse(linter_3.has_errors)
