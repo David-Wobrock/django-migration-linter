@@ -1,3 +1,8 @@
+## 7.1.0
+
+Bug:
+- Options and parameters that alter the linter output are now taken into account in the cache filename that is computed. As a side effect, all caches will be invalidated with this version bump. (#277)
+
 ## 7.0.0
 
 Feature:

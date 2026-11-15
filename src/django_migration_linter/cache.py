@@ -1,14 +1,28 @@
 from __future__ import annotations
 
+import hashlib
+import json
 import os
 import pickle
 
 
 class Cache(dict):
-    def __init__(self, django_folder: str | None, database: str, cache_path: str):
+    def __init__(
+        self,
+        django_folder: str | None,
+        database: str,
+        cache_path: str,
+        caching_options: dict[str, str],
+    ):
+        options_hash = hashlib.md5(
+            json.dumps(caching_options, sort_keys=True).encode("utf-8"),
+            usedforsecurity=False,
+        ).hexdigest()
         self.filename = os.path.join(
             cache_path,
-            "{}_{}.pickle".format(str(django_folder).replace(os.sep, "_"), database),
+            "{}_{}_{}.pickle".format(
+                str(django_folder).replace(os.sep, "_"), database, options_hash
+            ),
         )
 
         if not os.path.exists(os.path.dirname(self.filename)):
