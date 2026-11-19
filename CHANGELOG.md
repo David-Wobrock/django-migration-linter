@@ -2,6 +2,7 @@
 
 Bug:
 - Options and parameters that alter the linter output are now taken into account in the cache filename that is computed. As a side effect, all caches will be invalidated with this version bump. (#277)
+- Read the table of a `CREATE INDEX` from the identifier after `ON`, so a partial index (`WHERE (...)`) or an index with `USING ... WITH (...)` on a table created in the same migration is no longer reported as `CREATE_INDEX` / `CREATE_INDEX_EXCLUSIVE` (#341)
 
 ## 7.0.0
 

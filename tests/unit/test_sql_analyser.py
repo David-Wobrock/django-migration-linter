@@ -333,6 +333,63 @@ class PostgresqlAnalyserTestCase(SqlAnalyserTestCase):
         ]
         self.assertWarningSql(sql)
 
+    def test_create_index_with_trailing_clauses_with_table_creation(self):
+        # Clauses after the column list (the predicate of a partial index, an
+        # access method's options) must not be read as part of the table name.
+        partial_unique = (
+            'CREATE UNIQUE INDEX "email_uniq" ON "users" ((LOWER("email"))) '
+            "WHERE NOT (\"email\" = '');"
+        )
+        partial = (
+            'CREATE INDEX "active_email" ON "users" ("email") '
+            'WHERE ("is_active" AND "email" IS NOT NULL);'
+        )
+        hnsw = (
+            'CREATE INDEX "embedding_hnsw" ON "users" USING hnsw '
+            '("embedding" vector_cosine_ops) WITH (m = 16, ef_construction = 64);'
+        )
+        for index in (partial_unique, partial, hnsw):
+            with self.subTest(index=index):
+                self.assertValidSql(
+                    [
+                        'CREATE TABLE "users" ("email" text, "embedding" vector(3));',
+                        index,
+                    ]
+                )
+                self.assertValidSql(
+                    [
+                        "BEGIN;",
+                        'CREATE TABLE "users" ("email" text, "embedding" vector(3));',
+                        'ALTER TABLE "users" ADD CONSTRAINT "c" CHECK ("email" <> \'x\');',
+                        index,
+                        "COMMIT;",
+                    ]
+                )
+
+    def test_create_index_with_trailing_clauses_on_existing_table(self):
+        sql = 'CREATE INDEX "active_email" ON "users" ("email") WHERE ("is_active");'
+        self.assertWarningSql(sql, code="CREATE_INDEX")
+        sql = 'CREATE INDEX "embedding_hnsw" ON "users" USING hnsw ("embedding" vector_cosine_ops) WITH (m = 16);'
+        self.assertWarningSql(sql, code="CREATE_INDEX")
+        sql = [
+            'CREATE TABLE "other" ("email" text);',
+            'CREATE INDEX "active_email" ON "users" ("email") WHERE ("is_active");',
+        ]
+        self.assertWarningSql(sql, code="CREATE_INDEX")
+
+    def test_create_index_table_name_forms(self):
+        # A quoted index name may contain spaces, the table may be schema-qualified
+        # or written without a space before the column list.
+        for index, table in (
+            ('CREATE INDEX "an index name" ON "films" ("title");', '"films"'),
+            ('CREATE INDEX IF NOT EXISTS "idx" ON ONLY "films" ("title");', '"films"'),
+            ('CREATE INDEX "idx" ON "public"."films" ("title");', '"public"."films"'),
+            ('CREATE INDEX "idx" ON "films"("title");', '"films"'),
+        ):
+            with self.subTest(index=index):
+                self.assertWarningSql(index, code="CREATE_INDEX")
+                self.assertValidSql([f'CREATE TABLE {table} ("title" text);', index])
+
     def test_create_index_concurrently(self):
         sql = "CREATE INDEX CONCURRENTLY ON films (lower(title));"
         self.assertValidSql(sql)

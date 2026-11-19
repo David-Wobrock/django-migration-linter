@@ -38,12 +38,26 @@ def has_create_index_in_transaction(sql_statements: list[str], **kwargs) -> bool
     return False
 
 
+# A quoted identifier ("..." with "" as an escaped quote) or a bare one.
+_IDENTIFIER = r'"(?:[^"]|"")+"|[^\s"(.;]+'
+
+# The table an index is built on: the identifier right after `ON`, optionally
+# schema-qualified. Anchoring on the identifier (instead of "whatever precedes
+# the last opening parenthesis") keeps clauses that follow the column list -
+# `WHERE (...)` of a partial index, `USING ... (...) WITH (...)` - out of it.
+_CREATE_INDEX_TABLE = re.compile(
+    r"CREATE (?:UNIQUE )?INDEX (?:CONCURRENTLY )?(?:IF NOT EXISTS )?"
+    rf"(?:(?:{_IDENTIFIER}) )?ON (?:ONLY )?"
+    rf"(?P<table>(?:{_IDENTIFIER})(?:\.(?:{_IDENTIFIER}))?)"
+)
+
+
 def has_create_index(
     sql_statements: list[str], ignore_concurrently: bool = True, **kwargs
 ) -> bool:
     regex_result = None
     for i, sql in enumerate(sql_statements):
-        regex_result = re.search(r"CREATE (UNIQUE )?INDEX.*ON (.*) \(", sql)
+        regex_result = _CREATE_INDEX_TABLE.search(sql)
         if ignore_concurrently and re.search("INDEX CONCURRENTLY", sql):
             regex_result = None
         if regex_result:
@@ -52,7 +66,7 @@ def has_create_index(
         return False
 
     preceding_sql_statements = sql_statements[:i]
-    concerned_table = regex_result.group(2)
+    concerned_table = regex_result.group("table")
     table_is_added_in_transaction = any(
         sql.startswith(f"CREATE TABLE {concerned_table}")
         for sql in preceding_sql_statements
